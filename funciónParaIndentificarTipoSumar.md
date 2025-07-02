@@ -109,4 +109,94 @@ Total general: 466
 - **Formateo de montos**: Se asume que el monto está formateado con una coma como separador decimal (ej: '-12,00'). Si el formato es diferente (como puntos para miles), se debe ajustar la parte de parseo.
 - **Reutilización**: La función `sumarPorTipo` puede ser reutilizada con cualquier arreglo de objetos que tenga las propiedades `tipo` y `monto`.
 
-Este código proporciona una solución flexible y reutilizable para sumar montos por tipo en un arreglo de objetos. ¡Espero que sea de ayuda! 😊
+
+
+User: const dinero = [
+  { tipo: 'costo', monto: '12,00', descripcion: 'x' },
+  { tipo: 'dividendos', monto: '52,00', descripcion: 'x' },
+  { tipo: 'pretamo', monto: '120,00', descripcion: 'x' },
+  { tipo: 'dineroEntrada', monto: '320,00', descripcion: 'x' },
+  { tipo: 'costo', monto: '2,00', descripcion: 'x' },
+  { tipo: 'costo', monto: '13,00', descripcion: 'x' },
+  { tipo: 'dividendos', monto: '45,00', descripcion: 'x' },
+  { tipo: 'dineroEntrada', monto: '150,00', descripcion: 'x' },
+];
+Kimi: Entiendo que deseas sumar los montos por tipo en el arreglo `dinero` que proporcionaste. Vamos a crear una función en JavaScript que realice esta tarea. La función se llamará `sumarMontosPorTipo` y utilizará un objeto para acumular las sumas de cada tipo de gasto, ingreso, etc., y devolverá un objeto con los totales por tipo y el total general.
+
+Aquí está el código con comentarios detallados:
+
+```javascript
+// La función sumarMontosPorTipo toma un arreglo de objetos con las propiedades tipo y monto.
+function sumarMontosPorTipo(transacciones) {
+  // Inicializamos un objeto para almacenar el total de cada tipo.
+  const totalesPorTipo = {};
+
+  // Iteramos sobre cada transacción en el arreglo.
+  transacciones.forEach( transaccion => {
+    // Para cada transacción, obtenemos el tipo y el monto.
+    // El monto se limpia de la coma y se parsea a un número.
+    const { tipo, monto } = transaccion;
+    const montoNumerico = parseFloat(monto.replace(',', ''));
+
+    // Si ya hay un total para este tipo, sumamos el monto actual.
+    // Si no, iniciamos el total para este tipo con el monto actual.
+    if (totalesPorTipo[tipo]) {
+      totalesPorTipo[tipo] += montoNumerico;
+    } else {
+      totalesPorTipo[tipo] = montoNumerico;
+    }
+  });
+
+  // Calculamos el total general sumando todos los totals por tipo.
+  const totalGeneral = Object.values(totalesPorTipo).reduce((acumulador, actual) => acumulador + actual, 0);
+
+  // Devolvemos un objeto con los totales por tipo y el total general.
+  return {
+    totalesPorTipo,
+    totalGeneral
+  };
+}
+
+// Ejemplo de uso:
+const dinero = [
+  { tipo: 'costo', monto: '12,00', descripcion: 'x' },
+  { tipo: 'dividendos', monto: '52,00', descripcion: 'x' },
+  { tipo: 'pretamo', monto: '120,00', descripcion: 'x' },
+  { tipo: 'dineroEntrada', monto: '320,00', descripcion: 'x' },
+  { tipo: 'costo', monto: '2,00', descripcion: 'x' },
+  { tipo: 'costo', monto: '13,00', descripcion: 'x' },
+  { tipo: 'dividendos', monto: '45,00', descripcion: 'x' },
+  { tipo: 'dineroEntrada', monto: '150,00', descripcion: 'x' },
+];
+
+const { totalesPorTipo, totalGeneral } = sumarMontosPorTipo(dinero);
+
+console.log('Totales por tipo:', totalesPorTipo);
+console.log('Total general:', totalGeneral);
+```
+
+### Explicación paso a paso:
+
+1.Creamos una función llamada `sumarMontosPorTipo` que toma un array de transacciones como argumento.
+2.Inside the function, we initialize an empty object `totalesPorTipo` to keep track of the sum of amounts for each type.
+3.We use `forEach` to iterate over each transaction in the provided array.
+4.For each transaction, we extract the `tipo` (type) and `monto` (amount) properties.
+5.We remove the comma from the amount string and parse it into a floating-point number using `parseFloat`.
+6.If the type already exists in `totalesPorTipo`, we add the numeric amount to the existing total; if not, we initialize the total for that type.
+7.After processing all transactions, we calculate the `totalGeneral` (overall total) by summing up all the values in `totalesPorTipo` using `reduce`.
+8.Finally, we return an object containing `totalesPorTipo` and `totalGeneral`.
+
+### Salida esperada:
+
+```plaintext
+Totales por tipo: {
+  costo: 27,
+  dividendos: 97,
+  pretamo: 120,
+  dineroEntrada: 470
+}
+Total general: 690
+```
+
+Este código te permitirá sumar los montos por tipo en cualquier arreglo similar que tengas, y te dará un resumen detallado de los totales por tipo y el total general.
+
