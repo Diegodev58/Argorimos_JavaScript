@@ -167,3 +167,96 @@ Si la página que deseas scrapear carga contenido con JavaScript, puedes usar un
 4. **Usar headers adecuados:** Algunos sitios requieren headers específicos para permitir el acceso.
 
 ¡Listo! Ahora puedes scrapear contenido por clase o tablas completas desde una página web usando Node.js.
+
+
+
+
+### Ejemplo 3 
+
+User: en este cado no quiero pasar a un agreglo de un obejo :
+modifica este :
+
+const puppeteer = require('puppeteer');
+
+async function scrapeTable(url) {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.goto(url);
+
+    // Esperar a que la tabla esté cargada
+    await page.waitForSelector('table.tabla-objetivo');
+
+    const html = await page.content();
+    const $ = cheerio.load(html);
+
+    // Extraer la tabla
+    const tableData = [];
+    $('table.tabla-objetivo tr').each((index, element) => {
+        const columns = [];
+        $(element).find('td, th').each((colIndex, colElement) => {
+            columns.push($(colElement).text().trim());
+        });
+        tableData.push(columns);
+    });
+
+    console.log('Tabla extraída:');
+    tableData.forEach(row => {
+        console.log(row.join('\t'));
+    });
+
+    await browser.close();
+}
+
+scrapeTable('https://ejemplo.com/pagina-objetivo  ');
+Kimi: To modify the script so that the extracted table data is stored as an array of objects (where each object represents a row in the table), you can adjust the code as follows. This script will first extract the headers of the table and then map each subsequent row to an object with keys corresponding to those headers.
+
+Here's the updated code:
+
+```javascript
+const puppeteer = require('puppeteer');
+
+async function scrapeTable(url) {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    try {
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+        await page.waitForSelector('table.tabla-objetivo');
+
+        const html = await page.content();
+        const $ = cheerio.load(html);
+
+        const tableData = [];
+        const headers = [];
+        let isHeaderRow = true;
+
+        $('table.tabla-objetivo tr').each((index, element) => {
+            const row = {};
+            $(element).find('td, th').each((colIndex, colElement) => {
+                const text = $(colElement).text().trim();
+                if (isHeaderRow) {
+                    headers.push(text);
+                } else {
+                    row[headers[colIndex]] = text;
+                }
+            });
+            if (!isHeaderRow) {
+                tableData.push(row);
+            }
+            isHeaderRow = false;
+        });
+
+        console.log('Tabla extraída:');
+        console.log(tableData);
+
+    } catch (error) {
+        console.error('Error al scrapear la tabla:', error);
+    } finally {
+        await browser.close();
+    }
+}
+
+// Replace with your target URL
+scrapeTable('https://ejemplo.com/pagina-objetivo');
+```
+
+
