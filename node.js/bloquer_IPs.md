@@ -290,3 +290,128 @@ function isIpBlocked(ip) {
 
 Para proyectos más grandes o críticos, recomendamos usar la primera versión más robusta, pero esta versión simplificada es perfecta para aprender o para necesidades básicas.
 
+### Opcion 3 
+###.................................................................................................................................................................................
+
+User: asi pero como seria si tengo las ip a bloquer el un arreglo  [{ip1}, {ip2}]
+Kimi: Si tienes las IPs a bloquear en un arreglo de objetos como `[ { ip: '192.168.1.100' }, { ip: '10.0.0.1' } ]`, puedes adaptar el código de la siguiente manera:
+
+```javascript
+const express = require('express');
+const app = express;
+const port = 3000;
+
+// Lista de IPs bloqueadas en formato de objetos
+const blockedIps = [
+    { ip: '192.168.1.100' },
+    { ip: '10.0.0.1' }
+];
+
+// Middleware para obtener la IP del cliente y bloquearla si está en la lista
+app.use((req, res, next) => {
+    // Obtener la IP del cliente
+    const clientIp = req.ip || req.socket.remoteAddress;
+    
+    // Verificar si la IP está en la lista de bloqueadas
+    const isBlocked = blockedIps.some(item => item.ip === clientIp);
+    
+    if (isBlocked) {
+        console.log(`IP bloqueada ${clientIp} intentó acceder`);
+        return res.status(403).send('Acceso denegado');
+    }
+    
+    next(); // Continuar si la IP no está bloqueada
+});
+
+// Ejemplo de ruta protegida
+app.get('/protegido', (req, res) => {
+    res.send(`Acceso permitido desde IP: ${req.ip}`);
+});
+
+// Inicio del servidor
+app.listen(port, () => {
+    console.log(`Servidor corriendo en http://localhost:${port}`);
+    console.log('IPs bloqueadas:', blockedIps.map(item => item.ip));
+});
+```
+
+### Explicación del código:
+
+1. **Definición de IPs bloqueadas:**
+   ```javascript
+   const blockedIps = [
+       { ip: '192.168.1.100' },
+       { ip: '10.0.0.1' }
+   ];
+   ```
+   Aquí, las IPs bloqueadas se definen como un arreglo de objetos, donde cada objeto tiene una propiedad `ip` con la dirección IP específica.
+
+2. **Middleware para bloquear IPs:**
+   ```javascript
+   app.use((req, res, next) => {
+       const clientIp = req.ip || req.socket.remoteAddress;
+       const isBlocked = blockedIps.some(item => item.ip === clientIp);
+       
+       if (isBlocked) {
+           console.log(`IP bloqueada ${clientIp} intentó acceder`);
+           return res.status(403).send('Acceso denegado');
+       }
+       
+       next();
+   });
+   ```
+   - `req.ip` es proporcionado por Express y maneja automáticamente la mayoría de los casos, incluyendo proxies.
+   - `blockedIps.some(item => item.ip === clientIp)` verifica si la IP del cliente está en la lista de IPs bloqueadas.
+
+3. **Ruta protegida:**
+   ```javascript
+   app.get('/protegido', (req, res) => {
+       res.send(`Acceso permitido desde IP: ${req.ip}`);
+   });
+   ```
+   Esta es una ruta de ejemplo que solo será accesible si la IP del cliente no está bloqueada.
+
+### Cómo adaptar y usar:
+
+1. **Modificar la lista de IPs bloqueadas:**
+   ```javascript
+   blockedIps.push({ ip: 'nueva.ip.0.1' });
+   blockedIps.push({ ip: 'otra.ip.2.3' });
+   ```
+
+2. **Leer IPs bloqueadas desde variables de entorno:**
+   ```javascript
+   const blockedIps = process.env.BLOCKED_IPS?.split(',').map(ip => ({ ip })) || [];
+   ```
+
+3. **Usar una base de datos:**
+   ```javascript
+   const sqlite3 = require('sqlite3').verbose();
+   const db = new sqlite3.Database('./ips.db');
+
+   function getBlockedIps() {
+       return new Promise((resolve) => {
+           db.all('SELECT ip FROM blocked_ips', (err, rows) => {
+               resolve(rows.map(row => ({ ip: row.ip })));
+           });
+       });
+   }
+
+   // Llamar a getBlockedIps() al inicio del servidor y actualizar blockedIps
+   ```
+
+4. **Añadir una nueva IP bloqueada a través de una ruta (requiere autenticación):**
+   ```javascript
+   app.post('/bloquear-ip', (req, res) => {
+       const ipToBlock = req.body.ip;
+       
+       if (ipToBlock) {
+           blockedIps.push({ ip: ipToBlock });
+           res.send(`IP ${ipToBlock} bloqueada correctamente`);
+       } else {
+           res.status(400).send('Debe proporcionar una IP para bloquear');
+       }
+   });
+   ```
+
+Este código es adaptable y fácil de mantener, permitiéndote gestionar las IPs bloqueadas de manera flexible. Puedes ampliarlo con funcionalidades adicionales según tus necesidades, como agregar autenticación, usar una base de datos, o implementar logs más detallados.
