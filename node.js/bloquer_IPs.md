@@ -176,3 +176,117 @@ app.use(apiLimiter);
 4. Para aplicaciones críticas, considera usar una CDN con filtrado de IP como Cloudflare.
 
 Este código proporciona una base funcional que puedes adaptar a tus necesidades específicas.
+
+
+### forma mas facil 
+### opcion 2
+
+
+User: y una forma de hacer eso mismo de la ip desde node js pero pero mas facir de adatable
+Kimi: Claro, aquí tienes una versión más sencilla y adaptable de un bloqueador de IP en Node.js con Express. Este ejemplo es más ligero y fácil de entender, pero sigue siendo funcional:
+
+```javascript
+const express = require('express');
+const app = express;
+const port = 3000;
+
+// Lista de IPs bloqueadas (puede ser una variable de entorno o base de datos)
+let blockedIps = ['192.168.1.100', '10.0.0.1'];
+
+// Middleware sencillo para bloquear IPs
+app.use((req, res, next) => {
+    // Obtiene la IP del cliente (funciona para la mayoría de casos)
+    const clientIp = req.ip || req.socket.remoteAddress;
+    
+    // Comprueba si la IP está bloqueada
+    if (blockedIps.includes(clientIp)) {
+        console.log(`IP bloqueada ${clientIp} intentó acceder`);
+        return res.status(403).send('Acceso denegado');
+    }
+    
+    next(); // Continúa si la IP no está bloqueada
+});
+
+// Ejemplo de ruta protegida
+app.get('/protegido', (req, res) => {
+    res.send(`Acceso permitido desde IP: ${req.ip}`);
+});
+
+// Ejemplo de ruta para bloquear una nueva IP (requiere autenticación en producción)
+app.post('/bloquear-ip', (req, res) => {
+    const ipToBlock = req.body.ip;
+    
+    if (ipToBlock) {
+        blockedIps.push(ipToBlock);
+        res.send(`IP ${ipToBlock} bloqueada correctamente`);
+    } else {
+        res.status(400).send('Debe proporcionar una IP para bloquear');
+    }
+});
+
+app.listen(port, () => {
+    console.log(`Servidor corriendo en http://localhost:${port}`);
+    console.log('IPs bloqueadas:', blockedIps);
+});
+```
+
+### Características clave de esta versión simplificada:
+
+1. **Obtención de IP:** Usa `req.ip` que es proporcionado por Express y maneja automáticamente la mayoría de los casos, incluyendo proxies.
+
+2. **Bloqueo básico:** Se usa un simple array para la lista de IPs bloqueadas, fácil de modificar.
+
+3. **Simplicidad:** El código es más corto y fácil de entender, ideal para proyectos pequeños o como punto de partida.
+
+### Cómo adaptarlo:
+
+1. **Cambiar la lista de IPs bloqueadas:**
+```javascript
+blockedIps = ['nueva.ip.0.1', 'otra.ip.2.3'];
+```
+
+2. **Añadir nuevas rutas protegidas:**
+```javascript
+app.get('/otra-ruta', (req, res) => {
+    res.send(`Acceso permitido desde IP: ${req.ip}`);
+});
+```
+
+3. **Usar variables de entorno (más seguro):**
+```javascript
+const blockedIps = process.env.BLOCKED_IPS?.split(',') || [];
+```
+
+4. **Añadir autenticación al endpoint de bloqueo:**
+```javascript
+app.post('/bloquear-ip', (req, res) => {
+    if (req.headers.authorization !== 'tu_clave_secreta') {
+        return res.status(401).send('No autorizado');
+    }
+    // ... resto del código ...
+});
+```
+
+5. **Usar una base de datos:**
+```javascript
+const sqlite3 = require('sqlite3').verbose();
+const db = new sqlite3.Database('./ips.db');
+
+function isIpBlocked(ip) {
+    return new Promise((resolve) => {
+        db.get('SELECT * FROM blocked_ips WHERE ip = ?', [ip], (err, row) => {
+            resolve(row !== undefined);
+        });
+    });
+}
+```
+
+### ¿Por qué esta versión es más adaptable?
+
+- **Menos dependencias:** No requiere librerías adicionales.
+- **Código más sencillo:** Fácil de entender y modificar.
+- **Escalable:** Puedes fácilmente reemplazar el array por una base de datos.
+- **Flexible:** Se integra bien con cualquier otro middleware de Express.
+
+Para proyectos más grandes o críticos, recomendamos usar la primera versión más robusta, pero esta versión simplificada es perfecta para aprender o para necesidades básicas.
+
