@@ -180,7 +180,7 @@ Este código proporciona una base funcional que puedes adaptar a tus necesidades
 
 ### forma mas facil 
 ### opcion 2
-
+###...................................................................................................................................................................................................................
 
 User: y una forma de hacer eso mismo de la ip desde node js pero pero mas facir de adatable
 Kimi: Claro, aquí tienes una versión más sencilla y adaptable de un bloqueador de IP en Node.js con Express. Este ejemplo es más ligero y fácil de entender, pero sigue siendo funcional:
